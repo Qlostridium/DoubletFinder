@@ -1,26 +1,12 @@
 nextflow.preview.dsl=2
 
-//////////////////////////////////////////////////////
-//  Import sub-workflows from the modules:
+include {
+	DOUBLETFINDER__RUN
+} from './processes/doubletFinder.nf' params(params)
 
-include SC__FILE_CONVERTER from '../utils/processes/utils.nf' params(params)
+workflow {
+	input = Channel.fromPath(params.global.inputFile)
+						.map{ file -> tuple(params.global.sampleName,file)}
 
-include SC__TEMPLATE__PROCESS1 from './processes/process1.nf' params(params)
-
-
-//////////////////////////////////////////////////////
-// Define the workflow
-
-workflow template {
-
-    take:
-        data
-
-    main:
-        data = SC__FILE_CONVERTER(data)
-        data.view()
-
-        SC__TEMPLATE__PROCESS1(data)
-
+	DOUBLETFINDER__RUN(input)
 }
-
