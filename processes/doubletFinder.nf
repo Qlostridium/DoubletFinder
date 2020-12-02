@@ -1,6 +1,6 @@
 nextflow.preview.dsl=2
 
-scriptDir = (params.global.standAlone == true) ? "${params.global.rundir}/bin": "${params.global.rundir}/src/DoubletFinder/bin"
+scriptDir = "${workflow.projectDir}/src/DoubletFinder/bin"
 
 process DOUBLETFINDER__RUN {
 	publishDir "${params.global.outdir}/${samplename}", mode: 'symlink', pattern: "Plots/**"
@@ -11,14 +11,15 @@ process DOUBLETFINDER__RUN {
 	tuple val(samplename), file("${samplename}.DOUBLETFINDER.rds")
 	file("Plots/**")
 	script:
-	def sampleParams = params.configParser(samplename, params.DoubletFinder)
+	def sampleParams = params.parseConfig(samplename, params.global, params.DoubletFinder)
+		processParams = sampleParams.local
 	"""
 	Rscript ${scriptDir}/doubletFinder.R --seuratObj ${sobj} \
 	--output ${samplename}.DOUBLETFINDER.rds \
-	${(sampleParams.minPCT == null) ? '' : '--minPCT ' + sampleParams.minPCT} \
-	${(sampleParams.maxPCT == null) ? '' : '--maxPCT ' + sampleParams.maxPCT} \
-	${(sampleParams.pN == null) ? '' : '--pN ' + sampleParams.pN} \
-	${(sampleParams.dimsToUse == null) ? '' : '--dimsToUse ' + sampleParams.dimsToUse} \
-	${(sampleParams.cores == null) ? '' : '--cores ' + sampleParams.cores}
+	${(processParams.minPCT == null) ? '' : '--minPCT ' + processParams.minPCT} \
+	${(processParams.maxPCT == null) ? '' : '--maxPCT ' + processParams.maxPCT} \
+	${(processParams.pN == null) ? '' : '--pN ' + processParams.pN} \
+	${(processParams.dimsToUse == null) ? '' : '--dimsToUse ' + processParams.dimsToUse} \
+	${(processParams.cores == null) ? '' : '--cores ' + processParams.cores}
 	"""
 }
